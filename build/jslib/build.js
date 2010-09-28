@@ -365,6 +365,9 @@ var build, buildBaseConfig;
             if (config.includeRequire) {
                 config.modules[0].includeRequire = true;
             }
+            if (config.includeRequireStubs) {
+                config.modules[0].includeRequireStubs = true;
+            }
 
             //Does not have a build file, so set up some defaults.
             //Optimizing CSS should not be allowed, unless explicitly
@@ -521,7 +524,7 @@ var build, buildBaseConfig;
      */
     build.flattenModule = function (module, layer, config) {
         var buildFileContents = "", requireContents = "",
-            pluginContents = "", pluginBuildFileContents = "", includeRequire,
+            pluginContents = "", pluginBuildFileContents = "", includeRequire, includeRequireStubs,
             anonDefRegExp = /require\s*\.\s*def\s*\(\s*(\[|f|\{)/,
             prop, path, reqIndex, fileContents, currContents,
             i, moduleName, specified, deps;
@@ -545,9 +548,18 @@ var build, buildBaseConfig;
         if ("includeRequire" in module) {
             includeRequire = module.includeRequire;
         }
+        includeRequireStubs = false;
+        if ("includeRequireStubs" in module) {
+            includeRequireStubs = module.includeRequireStubs;
+        }
         if (includeRequire) {
-            requireContents = pragma.process(config.requireUrl, fileUtil.readFile(config.requireUrl), config);
-            buildFileContents += "require.js\n";
+            if (includeRequireStubs) {
+                requireContents = fileUtil.readFile(config.requireUrl.substring(0, config.requireUrl.lastIndexOf("/")) + "/require-stubs.js");
+                buildFileContents += "require-stubs.js\n";
+            } else {
+                requireContents = pragma.process(config.requireUrl, fileUtil.readFile(config.requireUrl), config);
+                buildFileContents += "require.js\n";
+            }
         }
 
         //Check for any plugins loaded, and hoist to the top, but below
