@@ -1,0 +1,18 @@
+<html>
+<head>
+  <title>Require test</title>
+
+  <!--
+  <script src="require.js"></script>
+  -->
+  <script src="require-stubs.js"></script>
+  <script>
+  require.def('a', [], function () { return 'a'; });
+  require.def('c', ['a','b'], function (a, b) { alert('c'); return 'c'; });
+  require.def('b', [], function () { return 'b'; });
+  </script>
+</head>
+<body>
+</body>
+</html>
+

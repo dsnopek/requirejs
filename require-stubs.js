@@ -7,7 +7,8 @@
 var require;
 (function(){
 	var factories = {},
-		modules = {};
+		modules = {},
+        pending = {};
 	function req(id){
 		var module = modules[id];
 		if(module){
@@ -55,11 +56,48 @@ var require;
         }
         callback(req);
     };
+    // Simple, clean require.def() implementation
+    /*
     require.def = function(id, deps, factory){
         if(typeof deps == "function"){
             factories[id] = deps;
         }else{
             (factories[id] = factory).deps = deps; 
+        }
+	};
+    */
+    // Convoluted require.def() to mimic require.js behavior of running all
+    // callbacks once we have the dependencies.
+    require.def = function(id, deps, factory){
+        var i, x, ready = true;
+        if(typeof deps == "function"){
+            factories[id] = deps;
+        }else{
+            (factories[id] = factory).deps = deps; 
+
+            for(i = 0; i < deps.length; i++) {
+                if (typeof factories[deps[i]] == 'undefined') {
+                    if (typeof pending[deps[i]] == 'undefined') {
+                        pending[deps[i]] = {};
+                    }
+                    pending[deps[i]][id] = true;
+                    ready = false;
+                }
+            }
+        }
+        if (ready) {
+            req(id);
+        }
+        if (pending[id]) {
+            x: for(x in pending[id]) {
+                for(i = 0; i < factories[x].deps.length; i++) {
+                    if (typeof factories[factories[x].deps[i]] == 'undefined') {
+                        continue x;
+                    }
+                }
+                delete pending[id][x];
+                req(x);
+            }
         }
 	};
 })();
